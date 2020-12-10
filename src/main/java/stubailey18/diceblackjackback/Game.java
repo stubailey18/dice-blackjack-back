@@ -12,17 +12,17 @@ public class Game {
         this.inGamePlayers = new LinkedList<>();
     }
 
-    public int addPlayer(String name) {
+    public synchronized int addPlayer(String name) {
         var inGamePlayer = new InGamePlayer(new Player(name));
         inGamePlayers.add(inGamePlayer);
         return inGamePlayer.getPlayer().getId();
     }
 
-    public void removePlayer(int playerId) {
+    public synchronized void removePlayer(int playerId) {
         inGamePlayers.removeIf(inGamePlayer -> inGamePlayer.getPlayer().getId() == playerId);
     }
 
-    public void hit(int playerId) {
+    public synchronized void hit(int playerId) {
         inGamePlayers
                 .stream()
                 .filter(inGamePlayer -> inGamePlayer.getPlayer().getId() == playerId)
@@ -45,7 +45,7 @@ public class Game {
         }
     }
 
-    public void stand(int playerId) {
+    public synchronized void stand(int playerId) {
         inGamePlayers
                 .stream()
                 .filter(inGamePlayer -> inGamePlayer.getPlayer().getId() == playerId)
@@ -57,7 +57,17 @@ public class Game {
         }
     }
 
-    public void computeAndAssignPoints() {
+    public synchronized void reset() {
+        inGamePlayers.forEach(inGamePlayer -> {
+            inGamePlayer.setDie1Value(0);
+            inGamePlayer.setDie2Value(0);
+            inGamePlayer.setNumRolls(0);
+            inGamePlayer.setStanding(false);
+            inGamePlayer.setTotal(0);
+        });
+    }
+
+    private void computeAndAssignPoints() {
         List<Player> playersWithTotalOf21 = findPlayersWithTotalOf21();
         if (playersWithTotalOf21.size() > 0) {
             playersWithTotalOf21.forEach(player -> player.setPoints(player.getPoints() + 2));
@@ -69,16 +79,6 @@ public class Game {
                 playersWithMaxTotalLessThan21.forEach(player -> player.setPoints(player.getPoints() + 1));
             }
         }
-    }
-
-    public void reset() {
-        inGamePlayers.forEach(inGamePlayer -> {
-            inGamePlayer.setDie1Value(0);
-            inGamePlayer.setDie2Value(0);
-            inGamePlayer.setNumRolls(0);
-            inGamePlayer.setStanding(false);
-            inGamePlayer.setTotal(0);
-        });
     }
 
     private boolean isOver() {
@@ -126,7 +126,7 @@ public class Game {
                 .collect(Collectors.toList());
     }
 
-    public List<InGamePlayer> getInGamePlayers() {
+    public synchronized List<InGamePlayer> getInGamePlayers() {
         return inGamePlayers;
     }
 }

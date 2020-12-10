@@ -5,14 +5,17 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class WebSocketHandler extends TextWebSocketHandler {
 
-    private Map<WebSocketSession, Integer> sessions = new HashMap<>();
+    // each session is mapped to a player ID on joining the game
+    // this enables the removing of the player from the game when the session is removed
+    private Map<WebSocketSession, Integer> sessions = new ConcurrentHashMap<>();
+
     private Game game = new Game();
     private ObjectMapper mapper = new ObjectMapper();
 
@@ -35,6 +38,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
             var playerName = tokenizer.nextToken();
             int playerId = game.addPlayer(playerName);
             sessions.put(webSocketSession, playerId);
+            webSocketSession.sendMessage(new TextMessage(String.format("playerId::%s", playerId)));
         }
         if (operation.equalsIgnoreCase("hit")) {
             var playerId = Integer.parseInt(tokenizer.nextToken());
@@ -51,7 +55,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
         var sessionsToBeRemoved = new LinkedList<WebSocketSession>();
         sessions.keySet().forEach(session -> {
             try {
-                session.sendMessage(new TextMessage(mapper.writeValueAsString(game)));
+                session.sendMessage(new TextMessage(String.format("game::%s", mapper.writeValueAsString(game))));
             } catch (Exception e) {
 
                 // the player has refreshed/navigated away/closed the browser etc.
@@ -67,6 +71,6 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        sessions.put(session, null);
+        sessions.put(session, 0);
     }
 }
