@@ -11,9 +11,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-//        registry.addHandler(new WebSocketHandler(), "/diceblackjack")
-//                .setAllowedOrigins("https://affectionate-ride-7883fd.netlify.app");
-        registry.addHandler(new WebSocketHandler(), "/diceblackjack")
-                .setAllowedOrigins("http://localhost:4200");
+       registry.addHandler(new WebSocketHandler(), "/diceblackjack")
+               .setAllowedOrigins("https://affectionate-ride-7883fd.netlify.app");
     }
 }
