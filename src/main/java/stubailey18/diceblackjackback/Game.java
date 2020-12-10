@@ -12,8 +12,14 @@ public class Game {
         this.inGamePlayers = new LinkedList<>();
     }
 
-    public void addPlayer(String name) {
-        inGamePlayers.add(new InGamePlayer(new Player(name)));
+    public int addPlayer(String name) {
+        var inGamePlayer = new InGamePlayer(new Player(name));
+        inGamePlayers.add(inGamePlayer);
+        return inGamePlayer.getPlayer().getId();
+    }
+
+    public void removePlayer(int playerId) {
+        inGamePlayers.removeIf(inGamePlayer -> inGamePlayer.getPlayer().getId() == playerId);
     }
 
     public void hit(int playerId) {
@@ -57,6 +63,8 @@ public class Game {
             playersWithTotalOf21.forEach(player -> player.setPoints(player.getPoints() + 2));
         } else {
             List<Player> playersWithMaxTotalLessThan21 = findPlayersWithMaxTotalLessThan21();
+
+            // if there is only one player with the max total less than 21 then assign him/her a point
             if (playersWithMaxTotalLessThan21.size() == 1) {
                 playersWithMaxTotalLessThan21.forEach(player -> player.setPoints(player.getPoints() + 1));
             }
@@ -94,16 +102,23 @@ public class Game {
     }
 
     private int findMaxTotalLessThan21() {
+
+        // if there is no max total less than 21 then return 0
         return inGamePlayers
                 .stream()
                 .filter(inGamePlayer -> inGamePlayer.getTotal() < 21)
                 .mapToInt(inGamePlayer -> inGamePlayer.getTotal())
                 .max()
-                .getAsInt();
+                .orElse(0);
     }
 
     private List<Player> findPlayersWithMaxTotalLessThan21() {
         int maxTotalLessThan21 = findMaxTotalLessThan21();
+
+        // if there is no max total less than 21 (all player totals > 21) then return an empty list
+        if (maxTotalLessThan21 == 0) {
+            return new LinkedList<>();
+        }
         return inGamePlayers
                 .stream()
                 .filter(inGamePlayer -> inGamePlayer.getTotal() == maxTotalLessThan21)
